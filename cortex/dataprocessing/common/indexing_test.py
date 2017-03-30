@@ -9,7 +9,7 @@ __status__ = "Development"
 
 import unittest
 import indexing
-from indexing import Indexer, generate_dictionary, generate_index
+from indexing import MultiIndexer, generate_dictionary, generate_index
 import io
 import uuid
 import logging
@@ -44,53 +44,53 @@ class TestIndexerMethods(unittest.TestCase):
         
     def test_full_dictionary_generation(self):
         log.info("Testing full dictionary generation.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer)
         assert indexer.dictionary == self.reference_dictionary_full
 
     def test_top_20_dictionary_generation(self):
         log.info("Testing partial dictionary generation.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer, 20)
         assert indexer.dictionary == self.reference_dictionary_top_20
 
     def test_full_index_generation(self):
         log.info("Testing index generation for the full dictionary.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer)
         indexer = generate_index(indexer)
-        assert indexer.word_to_line_map == self.reference_word_to_line_map_full
+        assert indexer.word_to_line_map[0] == self.reference_word_to_line_map_full
 
     def test_top_20_index_generation(self):
         log.info("Testing index generation for the partial dictionary.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer, 20)
         indexer = generate_index(indexer)
-        assert indexer.word_to_line_map == self.reference_word_to_line_map_top_20
+        assert indexer.word_to_line_map[0] == self.reference_word_to_line_map_top_20
 
     def test_full_indexed_file_generation(self):
         log.info("Testing indexed file generation for the full dictionary.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer)
         indexer = generate_index(indexer)
-        assert indexer.indexed_file == self.reference_indexed_file_full
+        assert indexer.indexed_file[0] == self.reference_indexed_file_full
 
     def test_top_20_indexed_file_generation(self):
         log.info("Testing indexed file generation for the partial dictionary.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer, 20)
         indexer = generate_index(indexer)
-        assert indexer.indexed_file == self.reference_indexed_file_top_20
+        assert indexer.indexed_file[0] == self.reference_indexed_file_top_20
 
     def test_full_dictionary_line_to_sequence(self):
         log.info("Testing line to sequence id generation for the full dictionary.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer)
         assert indexer.convert_line_to_id_sequence(u"I have a pen .\n") == self.reference_line_to_sequence_full
 
     def test_top_20_dictionary_line_to_sequence(self):
         log.info("Testing line to sequence id generation for the partial dictionary.")
-        indexer = Indexer("/tmp/" + str(self.unique_filename))
+        indexer = MultiIndexer(["/tmp/" + str(self.unique_filename)])
         indexer = generate_dictionary(indexer, 20)
         assert indexer.convert_line_to_id_sequence(u"I have a pen .\n") == self.reference_line_to_sequence_top_20
         
