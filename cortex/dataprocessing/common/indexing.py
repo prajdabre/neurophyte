@@ -39,12 +39,12 @@ class MultiIndexer:
 		log.info("File locations: %s" % " , ".join(file_paths))
 		self.file_paths = file_paths
 		self.dictionary = {}
-		self.word_to_line_map = [defaultdict(set) for file_path in file_paths]
-		self.indexed_file = [[] for file_path in file_paths]
+		self.word_to_line_maps = [defaultdict(set) for file_path in file_paths]
+		self.indexed_files = [[] for file_path in file_paths]
 		self.num_lines = [0 for file_path in file_paths] 
 		self.num_words = [0 for file_path in file_paths]
 		self.avg_words_per_line = [0 for file_path in file_paths]
-		self.sentence_length_distribution = [defaultdict(int) for file_path in file_paths]
+		self.sentence_length_distributions = [defaultdict(int) for file_path in file_paths]
 
 	def convert_line_to_id_sequence(self, input_line):
 		"""
@@ -93,7 +93,7 @@ def generate_dictionary(indexer_obj, max_dictionary_size = 32000):
 			if line_len + residue > max_len:
 				max_len = line_len + residue
 
-			indexer_obj.sentence_length_distribution[i][line_len + residue] += 1
+			indexer_obj.sentence_length_distributions[i][line_len + residue] += 1
 
 			for word in line:
 				dictionary_counter[word] += 1
@@ -106,7 +106,7 @@ def generate_dictionary(indexer_obj, max_dictionary_size = 32000):
 
 		log.info("Sentence length statistics:")
 		for len_ind in xrange(10, max_len + 10, 10):
-			log.info("%d sentences are in the length range of %d to %d constituting %f percent of the corpus." % (indexer_obj.sentence_length_distribution[i][len_ind], len_ind - 10, len_ind, indexer_obj.sentence_length_distribution[i][len_ind] * 100.0 / indexer_obj.num_lines[i]))
+			log.info("%d sentences are in the length range of %d to %d constituting %f percent of the corpus." % (indexer_obj.sentence_length_distributions[i][len_ind], len_ind - 10, len_ind, indexer_obj.sentence_length_distributions[i][len_ind] * 100.0 / indexer_obj.num_lines[i]))
 		log.info("Closing file.")
 		file_to_index.close()
 	
@@ -140,11 +140,11 @@ def generate_index(indexer_obj):
 			if line_counter[i] % 10000 == 0:
 				log.info("Read %s lines so far" % line_counter[i])
 			id_seq = indexer_obj.convert_line_to_id_sequence(line)
-			indexer_obj.indexed_file[i].append(id_seq)
+			indexer_obj.indexed_files[i].append(id_seq)
 			word_counter[i] += len(id_seq[1:-1])
 
 			for id_in_seq in id_seq[1:-1]:
-				indexer_obj.word_to_line_map[i][id_in_seq].add(line_counter[i] - 1)
+				indexer_obj.word_to_line_maps[i][id_in_seq].add(line_counter[i] - 1)
 
 		log.info("Read %d lines in total." % line_counter[i])
 
