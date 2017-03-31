@@ -43,6 +43,7 @@ class MultiIndexer:
 		self.indexed_files = [[] for file_path in file_paths]
 		self.num_lines = [0 for file_path in file_paths] 
 		self.num_words = [0 for file_path in file_paths]
+		self.num_unk = [0 for file_path in file_paths]
 		self.avg_words_per_line = [0 for file_path in file_paths]
 		self.sentence_length_distributions = [defaultdict(int) for file_path in file_paths]
 
@@ -52,14 +53,16 @@ class MultiIndexer:
 		"""
 		input_line = ["unique#BOS#euqinu"] + input_line.strip().split(" ") + ["unique#EOS#euqinu"]
 		id_seq = []
+		unknown_counter = 0
 
 		for word in input_line:
 			if self.dictionary.has_key(word):
 				id_seq.append(self.dictionary[word])
 			else:
 				id_seq.append(self.dictionary["unique#UNK#euqinu"])
+				unknown_counter += 1
 
-		return id_seq
+		return id_seq, unknown_counter
 
 
 
@@ -102,7 +105,7 @@ def generate_dictionary(indexer_obj, max_dictionary_size = 32000):
 
 		indexer_obj.avg_words_per_line[i] = 1.0 * indexer_obj.num_words[i] / indexer_obj.num_lines[i]
 		
-		log.info("Average number of lines per line: %f." % indexer_obj.avg_words_per_line[i])
+		log.info("Average number of words per line: %f." % indexer_obj.avg_words_per_line[i])
 
 		log.info("Sentence length statistics:")
 		for len_ind in xrange(10, max_len + 10, 10):
@@ -110,7 +113,7 @@ def generate_dictionary(indexer_obj, max_dictionary_size = 32000):
 		log.info("Closing file.")
 		file_to_index.close()
 	
-	
+	log.info("Current dictionary size: %d tokens." % len(indexer_obj.dictionary))
 	log.info("Taking top %d most frequent words from dictionary." % max_dictionary_size)
 	dictionary_counter = dictionary_counter.most_common(max_dictionary_size)
 
@@ -132,22 +135,26 @@ def generate_index(indexer_obj):
 	log.info("Indexing.")
 	line_counter = [0 for file_path in indexer_obj.file_paths]
 	word_counter = [0 for file_path in indexer_obj.file_paths]
-
+	unknown_counter = [0 for file_path in indexer_obj.file_paths]
 	for i, file_to_index in enumerate(files_to_index):
+		
 		log.info("Reading new file.")
 		for line in file_to_index:
 			line_counter[i] += 1
 			if line_counter[i] % 10000 == 0:
 				log.info("Read %s lines so far" % line_counter[i])
-			id_seq = indexer_obj.convert_line_to_id_sequence(line)
+			id_seq, unk_count = indexer_obj.convert_line_to_id_sequence(line)
 			indexer_obj.indexed_files[i].append(id_seq)
 			word_counter[i] += len(id_seq[1:-1])
+			unknown_counter[i] += unk_count
 
 			for id_in_seq in id_seq[1:-1]:
 				indexer_obj.word_to_line_maps[i][id_in_seq].add(line_counter[i] - 1)
 
+		indexer_obj.num_unk[i] = unknown_counter[i]
 		log.info("Read %d lines in total." % line_counter[i])
-
+		log.info("Total number of words: %d tokens." % indexer_obj.num_words[i])
+		log.info("Total number of unknown words: %d tokens which forms %f percent of the total corpus." % (indexer_obj.num_unk[i], 100.0 * indexer_obj.num_unk[i] / indexer_obj.num_words[i]))
 		assert line_counter[i] == indexer_obj.num_lines[i]
 		assert word_counter[i] == indexer_obj.num_words[i]
 		log.info("Closing file.")
@@ -155,3 +162,32 @@ def generate_index(indexer_obj):
 
 	log.info("Indexing completed.")
 	return indexer_obj
+
+
+# import uuid
+# unique_filename = [str(uuid.uuid4()), str(uuid.uuid4())]
+# f = io.open("/tmp/" + unique_filename[0], "w", encoding = "utf-8")
+# f.write(u"I have an apple .\n")
+# f.write(u"I have a pen .\n")
+# f.write(u"Ah ! Apple - pen .\n")
+# f.write(u"I am fire , I am death , I am potato , I am the king of the universe .\n")
+# f.write(u"You think that the darkness is your ally ? You merely adopted the darkness , I was born in it , molded by it .\n")
+# f.flush()
+# f.close()
+
+# f = io.open("/tmp/" + unique_filename[1], "w", encoding = "utf-8")
+# f.write(u"In the beginning there was darkness .\n")
+# f.write(u"And from the darkness sprang forth the memes .\n")
+# f.write(u"Ah ! The memes ! How glorious they were .\n")
+# f.write(u"And people would be in awe of the memes and not get triggered by them .\n")
+# f.write(u"For memes are the source of energy and respite for the ones affected by the purposelessness of this life and universe .\n")
+# f.flush()
+# f.close()
+
+# indexer_obj = MultiIndexer(["/tmp/" + unique_filename[0], "/tmp/" + unique_filename[1]])
+# indexer_obj = generate_dictionary(indexer_obj, 68)
+# indexer_obj = generate_index(indexer_obj)
+
+# print indexer_obj.dictionary
+# print indexer_obj.indexed_files
+# print indexer_obj.word_to_line_maps

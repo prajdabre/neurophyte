@@ -107,13 +107,13 @@ class TestIndexerMethods(unittest.TestCase):
         log.info("Testing line to sequence id generation for the full dictionary.")
         indexer = MultiIndexer(["/tmp/" + self.unique_filename[0]])
         indexer = generate_dictionary(indexer)
-        assert indexer.convert_line_to_id_sequence(u"I have a pen .\n") == self.reference_line_to_sequence_full
+        assert indexer.convert_line_to_id_sequence(u"I have a pen .\n")[0] == self.reference_line_to_sequence_full
 
     def test_top_20_dictionary_line_to_sequence(self):
         log.info("Testing line to sequence id generation for the partial dictionary.")
         indexer = MultiIndexer(["/tmp/" + self.unique_filename[0]])
         indexer = generate_dictionary(indexer, 20)
-        assert indexer.convert_line_to_id_sequence(u"I have a pen .\n") == self.reference_line_to_sequence_top_20
+        assert indexer.convert_line_to_id_sequence(u"I have a pen .\n")[0] == self.reference_line_to_sequence_top_20
     
     def test_full_dictionary_generation_multi(self):
         log.info("Testing full dictionary generation.")
@@ -159,13 +159,13 @@ class TestIndexerMethods(unittest.TestCase):
         log.info("Testing line to sequence id generation for the full dictionary.")
         indexer = MultiIndexer(["/tmp/" + self.unique_filename[0], "/tmp/" + self.unique_filename[1]])
         indexer = generate_dictionary(indexer)
-        assert indexer.convert_line_to_id_sequence(u"And from the darkness sprang forth the memes .\n") == self.reference_line_to_sequence_multi_full
+        assert indexer.convert_line_to_id_sequence(u"And from the darkness sprang forth the memes .\n")[0] == self.reference_line_to_sequence_multi_full
 
     def test_top_20_dictionary_line_to_sequence(self):
         log.info("Testing line to sequence id generation for the partial dictionary.")
         indexer = MultiIndexer(["/tmp/" + self.unique_filename[0], "/tmp/" + self.unique_filename[1]])
         indexer = generate_dictionary(indexer, 20)
-        assert indexer.convert_line_to_id_sequence(u"And from the darkness sprang forth the memes .\n") == self.reference_line_to_sequence_multi_top_20
+        assert indexer.convert_line_to_id_sequence(u"And from the darkness sprang forth the memes .\n")[0] == self.reference_line_to_sequence_multi_top_20
 
 if __name__ == '__main__':
     unittest.main()
