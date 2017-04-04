@@ -69,7 +69,7 @@ def populate_seq2seq_data(seq2seqdata, language_pairs, indexed_sources, indexed_
 		for language_pair in language_pairs:
 			source = language_pair.split("-")[0]
 			target = language_pair.split("-")[1]
-			seq2seqdata.pairwise_training_data[language_pair] = [indexed_sources[source].indexed_files.pop(), indexed_targets[target].indexed_files.pop()]
+			seq2seqdata.pairwise_training_data[language_pair] = [[x,y] for x,y in zip(indexed_sources[source].indexed_files.pop(), indexed_targets[target].indexed_files.pop())]
 	else:
 		for source in indexed_sources:
 			indexed_sources[source].indexed_files.reverse()
@@ -79,7 +79,7 @@ def populate_seq2seq_data(seq2seqdata, language_pairs, indexed_sources, indexed_
 		for language_pair in language_pairs:
 			source = language_pair.split("-")[0]
 			target = language_pair.split("-")[1]
-			data = [indexed_sources[source].indexed_files.pop(), indexed_targets[target].indexed_files.pop()]
+			data = [[x,y] for x,y in zip(indexed_sources[source].indexed_files.pop(), indexed_targets[target].indexed_files.pop())]
 			if type_data == "dev":
 				seq2seqdata.pairwise_dev_data[language_pair] = data
 			else:

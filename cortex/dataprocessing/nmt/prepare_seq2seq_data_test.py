@@ -15,7 +15,7 @@ import uuid
 import logging
 
 logging.basicConfig()
-log = logging.getLogger("dataprocessing:nmt:prepare_seq2seq_data")
+log = logging.getLogger("dataprocessing:nmt:prepare_seq2seq_data_test")
 log.setLevel(logging.INFO)
 
 class TestSeq2SeqDataMakerMethods(unittest.TestCase):
@@ -73,9 +73,9 @@ class TestSeq2SeqDataMakerMethods(unittest.TestCase):
         assert seq2seqdata.target_dictionaries["fr"] == {"u":1, "v":2, "w":3}
         assert seq2seqdata.target_dictionaries["en"] == {"l":1, "m":2, "n":3}
         log.info("Testing training data population.")
-        assert seq2seqdata.pairwise_training_data["fr-en"] == [[[1,2,3],[1,2,2,3]],[[3,7,1],[7,1,2,3,4]]]
-        assert seq2seqdata.pairwise_training_data["en-fr"] == [[[3,3,5],[1,1,5],[4,5,1,6,7]], [[3,1,5],[1,2,5],[4,5,1,4,6]]] 
-        assert seq2seqdata.pairwise_training_data["fr-fr"] == [[[2,3,4],[1,4,5],[4,5,6,6,7]], [[1,2,1],[2,1,2],[3,3,3]]]
+        assert seq2seqdata.pairwise_training_data["fr-en"] == [[[1,2,3],[3,7,1]],[[1,2,2,3],[7,1,2,3,4]]]
+        assert seq2seqdata.pairwise_training_data["en-fr"] == [[[3,3,5],[3,1,5]],[[1,1,5],[1,2,5]],[[4,5,1,6,7],[4,5,1,4,6]]] 
+        assert seq2seqdata.pairwise_training_data["fr-fr"] == [[[2,3,4],[1,2,1]],[[1,4,5],[2,1,2]],[[4,5,6,6,7],[3,3,3]]]
     
     def test_populate_seq2seq_indexers(self):
         log.info("Testing seq2seq indexers population.")
