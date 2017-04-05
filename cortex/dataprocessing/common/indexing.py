@@ -120,7 +120,9 @@ def generate_dictionary(indexer_obj, max_dictionary_size = 32000):
 	for word, _ in dictionary_counter:
 		indexer_obj.dictionary[word] = len(dictionary_list)
 		dictionary_list.append(word)
-	log.info("Dictionary is ready. Size is %d tokens. The first 3 are reserved for beginning, end and unknown word tokens." % len(dictionary_list))
+	indexer_obj.dictionary["unique#PADDING#euqinu"] = len(dictionary_list)
+	dictionary_list.append("unique#PADDING#euqinu")
+	log.info("Dictionary is ready. Size is %d tokens. The first 4 are reserved for beginning, end, unknown and padding word tokens." % len(dictionary_list))
 	return indexer_obj
 
 def generate_index(indexer_obj):
@@ -162,32 +164,3 @@ def generate_index(indexer_obj):
 
 	log.info("Indexing completed.")
 	return indexer_obj
-
-
-# import uuid
-# unique_filename = [str(uuid.uuid4()), str(uuid.uuid4())]
-# f = io.open("/tmp/" + unique_filename[0], "w", encoding = "utf-8")
-# f.write(u"I have an apple .\n")
-# f.write(u"I have a pen .\n")
-# f.write(u"Ah ! Apple - pen .\n")
-# f.write(u"I am fire , I am death , I am potato , I am the king of the universe .\n")
-# f.write(u"You think that the darkness is your ally ? You merely adopted the darkness , I was born in it , molded by it .\n")
-# f.flush()
-# f.close()
-
-# f = io.open("/tmp/" + unique_filename[1], "w", encoding = "utf-8")
-# f.write(u"In the beginning there was darkness .\n")
-# f.write(u"And from the darkness sprang forth the memes .\n")
-# f.write(u"Ah ! The memes ! How glorious they were .\n")
-# f.write(u"And people would be in awe of the memes and not get triggered by them .\n")
-# f.write(u"For memes are the source of energy and respite for the ones affected by the purposelessness of this life and universe .\n")
-# f.flush()
-# f.close()
-
-# indexer_obj = MultiIndexer(["/tmp/" + unique_filename[0], "/tmp/" + unique_filename[1]])
-# indexer_obj = generate_dictionary(indexer_obj, 68)
-# indexer_obj = generate_index(indexer_obj)
-
-# print indexer_obj.dictionary
-# print indexer_obj.indexed_files
-# print indexer_obj.word_to_line_maps
