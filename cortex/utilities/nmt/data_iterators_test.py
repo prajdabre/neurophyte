@@ -22,6 +22,7 @@ class TestDataIterators(unittest.TestCase):
 		super(TestDataIterators, self).__init__(*args, **kwargs)
 		log.info("Initializing the test.")
 		self.seq2seqdata = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1],[1,2]],[[1,2],[1]]]
+		self.seq2seqdata_longer = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1],[1,2]],[[1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]]]
 
 	def test_ascending_data_sort_source_seq_len(self):
 	 	log.info("Testing ascending order sorter by source sequence length.")
@@ -58,6 +59,33 @@ class TestDataIterators(unittest.TestCase):
 	 	data_iterator = DataHandler(list(self.seq2seqdata))
 	 	data_iterator.sort("descending", "source+target")
 	 	assert data_iterator.data == [[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1,2,3],[1,2]],[[1],[1,2]],[[1,2],[1]]]
+
+	def test_batch_generation_one_epoch_batch_size_one(self):
+		log.info("Testing generation of batches for one epoch. Batch size is 1.")
+		batched_data = []
+		batched_data_reference = [[[[1,2,3],[1,2]]],[[[1,2,3,4,5],[1,2,3,4,5,6,7]]],[[[1],[1,2]]],[[[1,2],[1]]],[[[1,2,3,1,2],[1]]],[[[1,2,3,1,2],[1]]],[[[1,2,3,1,2],[1]]],[[[1,2,3,1,2],[1]]],[[[1,2,3,1,2],[1]]],[[[1,2,3,1,2],[1]]]]
+		data_iterator = DataHandler(list(self.seq2seqdata_longer))
+		for minibatch in data_iterator.batched_data_generator(batch_size = 1, num_epochs = 1, sorted_batches = False):
+			batched_data.append(minibatch)
+		assert batched_data == batched_data_reference
+
+	def test_batch_generation_one_epoch_batch_size_3(self):
+		log.info("Testing generation of batches for one epoch. Batch size is 3.")
+		batched_data = []
+		batched_data_reference = [[[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1],[1,2]]],[[[1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]]],[[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]]],[[[1,2,3,1,2],[1]]]]
+		data_iterator = DataHandler(list(self.seq2seqdata_longer))
+		for minibatch in data_iterator.batched_data_generator(batch_size = 3, num_epochs = 1, sorted_batches = False):
+			batched_data.append(minibatch)
+		assert batched_data == batched_data_reference
+
+	def test_batch_generation_one_epoch_batch_size_one(self):
+		log.info("Testing generation of batches for one epoch. Batch size is 100. Basically batch size is greater than available number of training items.")
+		batched_data = []
+		batched_data_reference = [[[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1],[1,2]],[[1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]]]]
+		data_iterator = DataHandler(list(self.seq2seqdata_longer))
+		for minibatch in data_iterator.batched_data_generator(batch_size = 100, num_epochs = 1, sorted_batches = False):
+			batched_data.append(minibatch)
+		assert batched_data == batched_data_reference
 
 if __name__ == '__main__':
     unittest.main()
