@@ -84,9 +84,11 @@ class DataHandler:
 		log.info("Splitting data into buckets.")
 		total_pairs_count = 0
 		bucketed_pairs_count = 0
-		pairs_per_bucket = {}
+		self.pairs_per_bucket = {}
 		for src_len, _ in self.buckets:
-			pairs_per_bucket[src_len] = 0
+			self.pairs_per_bucket[src_len] = 0
+
+		max_bucket_id = 0
 
 		for pair in self.data:
 			src_seq_len = len(pair[0])
@@ -97,12 +99,84 @@ class DataHandler:
 				if src_seq_len < src_len and tgt_seq_len < tgt_len:
 					self.bucketed_data[src_len].append(pair)
 					bucketed_pairs_count += 1
-					pairs_per_bucket[src_len] += 1
+					self.pairs_per_bucket[src_len] += 1
+					if max_bucket_id < src_len:
+						max_bucket_id = src_len
 					break
 		log.info("Total pairs are %s and out of them %s are bucketed." % (str(total_pairs_count), str(bucketed_pairs_count)))
 		log.info("The bucketwise statistics are:")
 		for src_len, tgt_len in self.buckets:
-			log.info("Source, target sequence lengths are %s and %s and the number of such pairs are %s." % (str(src_len), str(tgt_len), str(pairs_per_bucket[src_len])))
+			log.info("Source, target sequence lengths are %s and %s and the number of such pairs are %s." % (str(src_len), str(tgt_len), str(self.pairs_per_bucket[src_len])))
+			if src_len == max_bucket_id:
+				break
+
+		log.info("Generating bucket distribution for sampling.")
+		bucket_counts = []
+		for src_len, _ in self.buckets:
+			bucket_counts.append(self.pairs_per_bucket[src_len])
+			if src_len == max_bucket_id:
+				break
+		
+		self.bucket_distribution = [1.0 * sum(bucket_counts[:i+1])/bucketed_pairs_count for i in range(len(bucket_counts))]
+		log.info("Done.")
+
+	def get_random_bucket(self, force_random = None):
+		log.info("Selecting random bucket.")
+		random_number = random.random() if force_random is None else force_random
+		return self.buckets[min([i for i in range(len(self.bucket_distribution)) if self.bucket_distribution[i] > random_number])][0]
+
+	def batched_data_generator_for_bucketed_data(self, batch_size = 64, num_epochs = 5, sorted_batches = True, sort_by = "source"):
+		log.info("Preparing to generate batches.")
+		sort_key = None
+		if sort_by == "source":
+			sort_key = lambda x: len(x[0])
+		elif sort_by == "target":
+			sort_key = lambda x: len(x[1])
+		elif sort_by == "source+target":
+			sort_key = lambda x: len(x[0]+x[1])
+		
+		for epoch_id in range(num_epochs):
+			log.info("Starting epoch %s." % str(epoch_id + 1))
+			coverage_information_per_bucket = {}
+
+			for distr_index in range(len(self.bucket_distribution)):
+				if self.pairs_per_bucket[self.buckets[distr_index][0]] == 0:
+					coverage_information_per_bucket[self.buckets[distr_index][0]] = [0, 0, True]
+				else:
+					coverage_information_per_bucket[self.buckets[distr_index][0]] = [0, batch_size, False]
+				
+
+			while True:
+				if reduce(lambda x, y: x and y, [info[2] for info in coverage_information_per_bucket.values()]):
+					log.info("All buckets covered. Ending epoch %s." % str(epoch_id + 1))
+					break
+
+				random_bucket_id = self.get_random_bucket()
+				if coverage_information_per_bucket[random_bucket_id][2]:
+					continue
+
+				print "Geeting from bucket:",random_bucket_id
+				if coverage_information_per_bucket[random_bucket_id][1] > self.pairs_per_bucket[random_bucket_id]:
+					coverage_information_per_bucket[random_bucket_id][1] = self.pairs_per_bucket[random_bucket_id]
+				
+				current_begin_index = coverage_information_per_bucket[random_bucket_id][0]
+				current_end_index = coverage_information_per_bucket[random_bucket_id][1]
+				
+				current_batch = self.bucketed_data[random_bucket_id][current_begin_index:current_end_index]
+
+				if sorted_batches:
+					current_batch = sorted(current_batch, reverse = False, key = sort_key)
+				
+				yield current_batch
+
+				if current_end_index == self.pairs_per_bucket[random_bucket_id]:
+					coverage_information_per_bucket[random_bucket_id][2] = True
+					log.info("Bucket for source sentence length %s has been exhausted." % str(random_bucket_id))
+					continue
+				coverage_information_per_bucket[random_bucket_id][0] = current_end_index
+				coverage_information_per_bucket[random_bucket_id][1] += batch_size
+
+
 
 	def batched_data_generator(self, batch_size = 64, num_epochs = 5, sorted_batches = True, sort_by = "source"):
 		log.info("Preparing to generate batches.")

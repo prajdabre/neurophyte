@@ -85,7 +85,7 @@ class TestDataIterators(unittest.TestCase):
 			batched_data.append(minibatch)
 		assert batched_data == batched_data_reference
 
-	def test_batch_generation_one_epoch_batch_size_one(self):
+	def test_batch_generation_one_epoch_batch_size_onehundred(self):
 		log.info("Testing generation of batches for one epoch. Batch size is 100. Basically batch size is greater than available number of training items.")
 		batched_data = []
 		batched_data_reference = [[[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1],[1,2]],[[1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]]]]
@@ -113,6 +113,51 @@ class TestDataIterators(unittest.TestCase):
 		assert data_iterator.bucketed_data[10] == [[[1,2,3,4,5],[1,2,3,4,5,6,7,8,9,10]]]
 		assert data_iterator.bucketed_data[20] == []
 		assert data_iterator.bucketed_data[40] == [[[1,2,3,4,5,6,7,8,9,11,12,12,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,2,3,4,5,6,7,8,9,10]]]
+		assert data_iterator.bucket_distribution == [0.5, 0.75, 0.75, 1.0]
+
+	def test_bucketed_batch_generation_one_epoch_batch_size_one(self):
+		log.info("Testing bucketed batch data generation. Batch size is 1. Setting a seed for pseudorandomness of bucket choice.")
+		in_data = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7,8,9,10]],[[1],[1,2]],[[1,2,3,4,5,6,7,8,9,11,12,12,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,2,3,4,5,6,7,8,9,10]]]
+		ref_batched_data = [[[[1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 12, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]], [[[1, 2, 3], [1, 2]]], [[[1], [1, 2]]], [[[1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]]]
+		data_iterator = DataHandler(in_data)
+		data_iterator.generate_bucketed_data()
+		random.seed(1234)
+		batched_data = []
+		for minibatch in data_iterator.batched_data_generator_for_bucketed_data(batch_size = 1, num_epochs = 1, sorted_batches = False):
+			batched_data.append(minibatch)
+		assert batched_data == ref_batched_data
+
+	def test_bucketed_batch_generation_one_epoch_batch_size_two(self):
+		log.info("Testing bucketed batch data generation. Batch size is 2. Setting a seed for pseudorandomness of bucket choice.")
+		in_data = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7,8,9,10]],[[1],[1,2]],[[1,2,3,4,5,6,7,8,9,11,12,12,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,2,3,4,5,6,7,8,9,10]]]
+		ref_batched_data = [[[[1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 12, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]], [[[1, 2, 3], [1, 2]], [[1], [1, 2]]], [[[1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]]]
+		data_iterator = DataHandler(in_data)
+		data_iterator.generate_bucketed_data()
+		random.seed(1234)
+		batched_data = []
+		for minibatch in data_iterator.batched_data_generator_for_bucketed_data(batch_size = 2, num_epochs = 1, sorted_batches = False):
+			batched_data.append(minibatch)
+		assert batched_data == ref_batched_data
+
+	def test_bucketed_batch_generation_one_epoch_batch_size_onehundred(self):
+		log.info("Testing bucketed batch data generation. Batch size is 100. Setting a seed for pseudorandomness of bucket choice.")
+		in_data = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7,8,9,10]],[[1],[1,2]],[[1,2,3,4,5,6,7,8,9,11,12,12,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,2,3,4,5,6,7,8,9,10]]]
+		ref_batched_data = [[[[1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 12, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]], [[[1, 2, 3], [1, 2]], [[1], [1, 2]]], [[[1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]]]
+		data_iterator = DataHandler(in_data)
+		data_iterator.generate_bucketed_data()
+		random.seed(1234)
+		batched_data = []
+		for minibatch in data_iterator.batched_data_generator_for_bucketed_data(batch_size = 100, num_epochs = 1, sorted_batches = False):
+			batched_data.append(minibatch)
+		assert batched_data == ref_batched_data
+		
+	def test_pseudo_random_bucket_selection(self):
+		log.info("Testing pseudo random bucket slelection.")
+		in_data = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7,8,9,10]],[[1],[1,2]],[[1,2,3,4,5,6,7,8,9,11,12,12,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,2,3,4,5,6,7,8,9,10]]]
+		data_iterator = DataHandler(in_data)
+		data_iterator.generate_bucketed_data()
+		assert data_iterator.get_random_bucket(force_random = 0.8) == 40
+		assert data_iterator.get_random_bucket(force_random = 0.2) == 5
 
 	def test_data_filtering(self):
 		log.info("Testing data filtering.")
