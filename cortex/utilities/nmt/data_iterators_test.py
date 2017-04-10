@@ -12,6 +12,7 @@ from data_iterators import *
 import io
 import uuid
 import logging
+import numpy as np
 
 logging.basicConfig()
 log = logging.getLogger("utilities:nmt:data_iterators_test")
@@ -171,6 +172,25 @@ class TestDataIterators(unittest.TestCase):
 		data_iterator.filter_data(max_src_len = 100, max_tgt_len = 100)
 		assert data_iterator.data == self.seq2seqdata
 		
+	def test_convert_batch_info_feed(self):
+		log.info("Testing data feed generation.")
+		padded_batch = [[[1,2,3,10,10],[1,2,11,11,11,11,11]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1,10,10,10,10],[1,2,11,11,11,11,11]]]
+		mask = [[[True,True,True,False,False],[True,True,False,False,False,False,False]],[[True,True,True,True,True],[True,True,True,True,True,True,True]],[[True,False,False,False,False],[True,True,False,False,False,False,False]]]
+		src_feed_ref = [np.array([1, 1, 1], dtype=np.int32), np.array([2, 2, 10], dtype=np.int32), np.array([3, 3, 10], dtype=np.int32), np.array([10, 4, 10], dtype=np.int32), np.array([10, 5, 10], dtype=np.int32)]
+		tgt_feed_ref = [np.array([1, 1, 1], dtype=np.int32), np.array([2, 2, 2], dtype=np.int32), np.array([11, 3, 11], dtype=np.int32), np.array([11, 4, 11], dtype=np.int32), np.array([11, 5, 11], dtype=np.int32), np.array([11, 6, 11], dtype=np.int32), np.array([11, 7, 11], dtype=np.int32)]
+		src_weights_ref = [np.array([True, True, True], dtype=np.float32), np.array([True, True, False], dtype=np.float32), np.array([True, True, False], dtype=np.float32), np.array([False, True, False], dtype=np.float32), np.array([False, True, False], dtype=np.float32)]
+		tgt_weights_ref = [np.array([True, True, True], dtype=np.float32), np.array([True, True, True], dtype=np.float32), np.array([False, True, False], dtype=np.float32), np.array([False, True, False], dtype=np.float32), np.array([False, True, False], dtype=np.float32), np.array([False, True, False], dtype=np.float32), np.array([False, True, False], dtype=np.float32)]
+		src_feed, tgt_feed, src_weights, tgt_weights = convert_batch_into_feed(padded_batch, mask)
+
+		for src_feed_ind, src_feed_ref_ind, src_weights_ind, src_weights_ref_ind in zip(src_feed, src_feed_ref, src_weights, src_weights_ref):
+			print src_feed_ind, src_feed_ref
+			np.testing.assert_equal(src_feed_ind, src_feed_ref_ind)
+			np.testing.assert_equal(src_weights_ind, src_weights_ref_ind)
+		
+		for tgt_feed_ind, tgt_feed_ref_ind, tgt_weights_ind, tgt_weights_ref_ind in zip(tgt_feed, tgt_feed_ref, tgt_weights, tgt_weights_ref):
+			print tgt_feed_ind, tgt_feed_ref
+			np.testing.assert_equal(tgt_feed_ind, tgt_feed_ref_ind)
+			np.testing.assert_equal(tgt_weights_ind, tgt_weights_ref_ind)
 
 if __name__ == '__main__':
     unittest.main()

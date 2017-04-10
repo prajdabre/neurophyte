@@ -19,6 +19,7 @@ import itertools
 from itertools import chain, combinations
 from collections import defaultdict, Counter
 from copy import deepcopy
+import numpy as np
 
 import sys
 reload(sys)
@@ -223,6 +224,7 @@ class DataHandler:
 				current_end_index += batch_size*batch_size
 
 def pad_batch_and_generate_mask(batch, src_padding_id, tgt_padding_id):
+	log.info("Padding batch and generating masks.")
 	max_src_len = max([len(x[0]) for x in batch])
 	max_tgt_len = max([len(x[1]) for x in batch])
 	padded_batch = deepcopy(batch)
@@ -242,6 +244,24 @@ def pad_batch_and_generate_mask(batch, src_padding_id, tgt_padding_id):
 			tgt_mask[tgt_index] = False
 		batch_mask.append([src_mask, tgt_mask])
 	return padded_batch, batch_mask
+
+def convert_batch_into_feed(padded_batch, batch_mask):
+	log.info("Generating feeds.")
+	batch_size = len(padded_batch)
+	src_seq_len = len(padded_batch[0][0])
+	tgt_seq_len = len(padded_batch[0][1])
+
+	src_feed, tgt_feed, src_weights, tgt_weights = [], [], [], []
+
+	for src_word_index in range(src_seq_len):
+		src_feed.append(np.array([padded_batch[batch_index][0][src_word_index] for batch_index in range(batch_size)], dtype=np.int32))
+		src_weights.append(np.array([batch_mask[batch_index][0][src_word_index] for batch_index in range(batch_size)], dtype=np.float32))
+
+	for tgt_word_index in range(tgt_seq_len):
+		tgt_feed.append(np.array([padded_batch[batch_index][1][tgt_word_index] for batch_index in range(batch_size)], dtype=np.int32))
+		tgt_weights.append(np.array([batch_mask[batch_index][1][tgt_word_index] for batch_index in range(batch_size)], dtype=np.float32))
+
+	return src_feed, tgt_feed, src_weights, tgt_weights
 
 def sort(self, data, sort_type = "ascending", sort_by = "source"):
 	log.info("Sorting the data in %s order in terms of lenth of %s sequences." % (sort_type, sort_by))
