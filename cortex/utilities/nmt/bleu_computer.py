@@ -95,3 +95,23 @@ class bleu_computer:
 		self.ngram_stats = {ngram: 1.0 * self.correct_ngrams[ngram]/self.total_ngrams[ngram] for ngram in self.correct_ngrams}
 		self.brevity_penalty = log_brevity_penalty
 		return res
+
+if __name__ == "__main__":
+	import sys
+	import argparse
+	parser = argparse.ArgumentParser(description="Read in a two files, one containing the translations and the other containing the corresponding reference translations and calculate the BLEU.",
+									 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	parser.add_argument(
+		"references", help="The path to the file containing reference sentences.")
+	parser.add_argument(
+		"translations", help="The path to the file containing translated sentences.")
+	args = parser.parse_args()
+	
+	reference_sentences = [sentence.strip().split(" ") for sentence in io.open(args.references, encoding = "utf-8")]
+	translated_sentences = [sentence.strip().split(" ") for sentence in io.open(args.translations, encoding = "utf-8")]
+
+	bc = bleu_computer(reference_sentences)
+	bleu = bc.bleu(translated_sentences)
+
+	print "The BLEU score information is as follows:"
+	print bc.get_full_bleu_info()
