@@ -42,12 +42,27 @@ class DataHandler:
 		self.bucketed_data = {}
 		for src_len, _ in self.buckets:
 			self.bucketed_data[src_len] = []
-		
+		self.epochs_completed = 0
 
 	def random_shuffle(self):
 		log.info("Randomly shuffling the input data.")
 		self.data = random.shuffle(self.data)
 		log.info("Random shuffling complete.")
+
+	def filter_long_sentences(self, max_seq_len = 100, shorten_sequences = False):
+		log.info("Filtering all sequences with source or target sequences longer than %s units." % str(max_seq_len))
+		new_data = []
+		filter_count = 0
+		for src_seq, tgt_seq in self.data:
+			if len(src_seq) > max_seq_len or len(tgt_seq) > max_seq_len:
+				filter_count += 1
+				if shorten_sequences:
+					new_data.append([src_seq[:max_seq_len], tgt_seq[:max_seq_len]])
+			else:
+				new_data.append([src_seq, tgt_seq])
+
+		self.data = new_data
+		log.info("Filtering complete. Removed/Shortened %s sequence pairs. Current number of sequence pairs %s." % (str(filter_count), str(len(self.data))))
 
 	def sort(self, sort_type = "ascending", sort_by = "source"):
 		log.info("Sorting the data in %s order in terms of lenth of %s sequences." % (sort_type, sort_by))
@@ -150,6 +165,7 @@ class DataHandler:
 			while True:
 				if reduce(lambda x, y: x and y, [info[2] for info in coverage_information_per_bucket.values()]):
 					log.info("All buckets covered. Ending epoch %s." % str(epoch_id + 1))
+					self.epochs_completed += 1
 					break
 
 				random_bucket_id = self.get_random_bucket()
@@ -218,6 +234,7 @@ class DataHandler:
 
 				if current_end_index == maximum_index:
 					log.info("Ending epoch %s." % str(epoch_id + 1))
+					self.epochs_completed += 1
 					break
 				
 				current_begin_index = current_end_index

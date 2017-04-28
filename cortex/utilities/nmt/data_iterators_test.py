@@ -25,6 +25,20 @@ class TestDataIterators(unittest.TestCase):
 		self.seq2seqdata = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1],[1,2]],[[1,2],[1]]]
 		self.seq2seqdata_longer = [[[1,2,3],[1,2]],[[1,2,3,4,5],[1,2,3,4,5,6,7]],[[1],[1,2]],[[1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]],[[1,2,3,1,2],[1]]]
 
+	def test_remove_sequences_longer_than_3_units(self):
+		log.info("Testing removing sequences longer than 3 units.")
+		target_data_reference = [[[1,2,3],[1,2]],[[1],[1,2]],[[1,2],[1]]]
+		data_iterator = DataHandler(list(self.seq2seqdata))
+		data_iterator.filter_long_sentences(max_seq_len = 3)
+		assert data_iterator.data == target_data_reference
+
+	def test_shorten_sequences_longer_than_3_units(self):
+		log.info("Testing shortening sequences longer than 3 units.")
+		target_data_reference = [[[1,2,3],[1,2]],[[1,2,3],[1,2,3]],[[1],[1,2]],[[1,2],[1]]]
+		data_iterator = DataHandler(list(self.seq2seqdata))
+		data_iterator.filter_long_sentences(max_seq_len = 3, shorten_sequences = True)
+		assert data_iterator.data == target_data_reference
+
 	def test_reverse_target_sequences(self):
 		log.info("Testing reversing target sequences.")
 		reversed_target_data_reference = [[[1,2,3],[2,1]],[[1,2,3,4,5],[7,6,5,4,3,2,1]],[[1],[2,1]],[[1,2],[1]]]

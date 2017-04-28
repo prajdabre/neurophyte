@@ -48,7 +48,7 @@ class Seq2SeqData:
 		json.dump([self.source_dictionaries, self.target_dictionaries], open(self.meta.save_path + ".voc", "w"), indent=2, separators=(',', ': '))
 		log.info("Dictionaries saved.")
 		log.info("Saving training, dev and test data to file.")
-		json.dump([self.pairwise_training_data, self.pairwise_dev_data, self.pairwise_test_data], gzip.open(self.meta.save_path + ".voc", "wb"), indent=2, separators=(',', ': '))
+		json.dump([self.pairwise_training_data, self.pairwise_dev_data, self.pairwise_test_data], gzip.open(self.meta.save_path + ".data", "wb"), indent=2, separators=(',', ': '))
 		log.info("Training, dev and test data saved.")
 		log.info("Saving configuration.")
 		json.dump(args.__dict__, open(self.meta.save_path + ".config", "w"), indent=2, separators=(',', ': '))
@@ -215,3 +215,7 @@ if __name__ == '__main__':
 	if args.task_type == "basic":
 		log.info("Preparing data for single source single target NMT model.")
 		all_data = generate_multilingual_data(args, type_data = "basic")	
+
+	if args.task_type == "multilingual_multiway":
+		log.info("Preparing data for multilingual multiway NMT model.")
+		all_data = generate_multilingual_data(args, type_data = "multilingual_multiway")	
