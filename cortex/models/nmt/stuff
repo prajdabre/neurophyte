@@ -1,0 +1,36 @@
+python cortex/dataprocessing/nmt/prepare_seq2seq_data.py --save_path /tmp/datacreation --train_src_corpora /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.train.src /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.train.tgt --train_tgt_corpora /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.train.tgt /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.train.src --dev_src_corpora /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.dev.src /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.dev.tgt --dev_tgt_corpora /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.dev.tgt /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.dev.src --test_src_corpora /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.test.src /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.test.tgt --test_tgt_corpora /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.test.tgt /windroot/raj/corpora_downloads/IWSLT2016/fr-en/ms2s/1s1t/8k/mlnmt.test.src --max_src_vocab_size 8000 --max_tgt_vocab_size 8000 --train_language_pairs fr-en en-fr --dev_language_pairs fr-en en-fr --test_language_pairs fr-en en-fr --task_type multilingual_multiway
+
+
+for i in fr
+do
+for j in 8
+do
+python make_data.py /windroot/raj/corpora_downloads/IWSLT2016/"$i"-en/ms2s/1s1t/"$j"k/mlnmt.train.src /windroot/raj/corpora_downloads/IWSLT2016/"$i"-en/ms2s/1s1t/"$j"k/mlnmt.train.tgt /windroot/raj/corpora_downloads/IWSLT2016/"$i"-en/ms2s/1s1t/"$j"k/mlnmt.testingforcompat --src_voc_size "$j"000 --tgt_voc_size "$j"000 --test_src /windroot/raj/corpora_downloads/IWSLT2016/"$i"-en/ms2s/1s1t/"$j"k/mlnmt.test.src --test_tgt /windroot/raj/corpora_downloads/IWSLT2016/"$i"-en/ms2s/1s1t/"$j"k/mlnmt.test.tgt --dev_src /windroot/raj/corpora_downloads/IWSLT2016/"$i"-en/ms2s/1s1t/"$j"k/mlnmt.dev.src --dev_tgt /windroot/raj/corpora_downloads/IWSLT2016/"$i"-en/ms2s/1s1t/"$j"k/mlnmt.dev.tgt
+done
+done
+
+
+import tensorflow as tf
+
+
+class FFAttentionalEncoder:
+	def __init__(self, batch_size = 32, vocab_size = 32000, embedding_size = 512, layer_size = 512, num_layers = 2, dropout = 0.2, gpu = 0):
+		self.batch_size = batch_size
+		self.vocab_size = vocab_size
+		self.embedding_size = embedding_size
+		self.layer_size = layer_size
+		self.num_layers = num_layers
+		self.dropout = dropout
+		self.gpu = gpu
+		
+	def embed_input(self, input_seq):
+		with tf.device("/cpu:0"):
+			encoder_embedder = tf.get_variable("encoder_embedder", [self.vocab_size, self.embedding_size], dtype = tf.float32)
+			embedded_inputs = tf.nn.embedding_lookup(encoder_embedder, input_seq)
+		return embed_input
+
+	def ff_process(self, attentioned_seq, seq_len):
+		linear_w = tf.get_variable("linear_w", [self.layer_size, self.layer_size], dtype = tf.float32)
+		linear_b = tf.get_variable("linear_b", [self.layer_size], dtype = tf.float32)
+		projected = tf.nn.relu(tf.matmul(linear_w, tf.reshape(attentioned_seq, [self.batch_size*seq_len,self.layer_size])) + linear_b)
+		return tf.reshape(projected,[self.batch_size, seq_len, self.layer_size])

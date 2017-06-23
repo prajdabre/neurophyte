@@ -86,6 +86,16 @@ if __name__ == '__main__':
 	train, dev, test = training_data
 	src_vocs, tgt_vocs = vocabulary_data
 
-	print training_data_config
-	print src_vocs.keys()
-	
+	log.info("Data loaded.")
+	log.info("Training data configuration is as follows: %s" % str(training_data_config))
+	log.info("Now setting up the NMT training pipeline.")
+
+	task_type = training_data_config.task_type
+
+	if task_type == "basic":
+		log.info("Learning a basic encoder decoder model with attention.") # Note: A basic model is essentially a MLNMT model with a single source and target.
+	elif task_type == "multisource":
+		log.info("Learning a multisource encoder decoder model with attention.") # TODO (Raj): Make sure that the multisource model takes parameters which allow it to have shared encoders and/or attentions (with or without attention control) and/or vocabularies. 
+	elif task_type == "multilingual_multiway":
+		log.info("Learning a multilingual multiway encoder decoder model with attention.") # TODO (Raj): Make sure that the multilingual multiway model takes parameters which allow it to have shared encoders and/or attentions and/or vocabularies.
+		# Note: For now, I wont implement the same exact model that Orhan et al. (2016) did cause to me its overkill. What I will do is N encoders and M decoders with a shared attention which is used as it is without any special treatment.
